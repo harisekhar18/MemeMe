@@ -20,9 +20,6 @@ class ViewController: UIViewController,  UITextFieldDelegate, UIImagePickerContr
     @IBOutlet weak var topNavigationBar: UIToolbar!
     @IBOutlet weak var bottomToolBar: UIToolbar!
     
-    let topTextFieldDelegate = TopTextFieldDelegate()
-    let bottomTextFieldDelegate = BottomTextFieldDelegate()
-    
     // MARK: MemeMe Text Attributes
     let memeTextAttributes: [NSAttributedString.Key: Any] = [
         NSAttributedString.Key.strokeColor: UIColor.black,
@@ -41,36 +38,48 @@ class ViewController: UIViewController,  UITextFieldDelegate, UIImagePickerContr
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.topTextField.text = "TOP"
+        configureTextField(textField: topTextField, defaultText: "TOP")
+        configureTextField(textField: bottomTextField, defaultText: "BOTTOM")
         
-        topTextField.defaultTextAttributes = memeTextAttributes
-        self.topTextField.textAlignment = .center
-        self.bottomTextField.text = "BOTTOM"
-        
-        bottomTextField.defaultTextAttributes = memeTextAttributes
-        self.bottomTextField.textAlignment = .center
-        self.topTextField.delegate = self.topTextFieldDelegate
-        self.bottomTextField.delegate = bottomTextFieldDelegate
+    }
+    
+    func configureTextField(textField: UITextField, defaultText: String) {
+        textField.delegate = self
+        textField.text = defaultText
+        textField.defaultTextAttributes = memeTextAttributes
+        textField.textAlignment = .center
         shareButton.isEnabled = false
+    }
+    
+    //MARK: Setting the textfield to blank when it is clicked
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        textField.text = ""
         
+    }
+    
+    //MARK: textFieldShouldReturn function implementation
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
     }
     
     
     // MARK: Picking an Image from Album
     @IBAction func pickImageFromAlbum(_ sender: Any) {
-        let memeImagePickerController = UIImagePickerController()
-        memeImagePickerController.delegate = self
-        memeImagePickerController.sourceType = .photoLibrary
-        present(memeImagePickerController, animated: true, completion: nil)
-        shareButton.isEnabled = true
+        presentImagePickerWith(sourceType: .photoLibrary)
         
     }
     
     // MARK: Capture image from camera
     @IBAction func pickImageFromCamera(_ sender: Any) {
+        presentImagePickerWith(sourceType: .camera)
+    }
+    
+    // MARK: Navigating to the respective screen based on source type
+    func presentImagePickerWith(sourceType: UIImagePickerController.SourceType) {
         let memeImagePickerController = UIImagePickerController()
         memeImagePickerController.delegate = self
-        memeImagePickerController.sourceType = .camera
+        memeImagePickerController.sourceType = sourceType
         present(memeImagePickerController, animated: true, completion: nil)
         shareButton.isEnabled = true
     }
@@ -185,18 +194,23 @@ class ViewController: UIViewController,  UITextFieldDelegate, UIImagePickerContr
     
     //MARK: Generating the Memed image
     func generateMemedImage() -> UIImage {
-        topNavigationBar.isHidden = true
-        bottomToolBar.isHidden = true
+        
+        configureToolBars(status: true)
         
         UIGraphicsBeginImageContext(self.view.frame.size)
         view.drawHierarchy(in: self.view.frame, afterScreenUpdates: true)
         let memedImage:UIImage = UIGraphicsGetImageFromCurrentImageContext()!
         UIGraphicsEndImageContext()
         
-        topNavigationBar.isHidden = false
-        bottomToolBar.isHidden = false
+        configureToolBars(status: false)
         
         return memedImage
+    }
+    
+    // MARK: Configure Tool Bars based on need
+    func configureToolBars(status: Bool) {
+        topNavigationBar.isHidden = status
+        bottomToolBar.isHidden = status
     }
 
    
